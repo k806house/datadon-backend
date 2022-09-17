@@ -66,6 +66,9 @@ resource "aws_apigatewayv2_api" "lambda" {
   protocol_type = "HTTP"
   cors_configuration  {
     allow_origins = ["*"]
+    allow_headers = ["*"]
+    allow_methods = ["*"]
+    expose_headers = ["*"]
   }
 }
 
@@ -173,6 +176,39 @@ module "exam_files" {
 
   function_name = "exam_files"
   endpoint = "/exam/files"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "exam_tags_get" {
+  source = "./lambda"
+
+  function_name = "exam_tags_get"
+  endpoint = "/exam/tags/get"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "exam_tags_set" {
+  source = "./lambda"
+
+  function_name = "exam_tags_set"
+  endpoint = "/exam/tags/set"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "tag_get" {
+  source = "./lambda"
+
+  function_name = "tag_get"
+  endpoint = "/tag/get"
   s3_bucket = aws_s3_bucket.lambda_bucket.id
   role = aws_iam_role.lambda_exec.arn
   api_id = aws_apigatewayv2_api.lambda.id

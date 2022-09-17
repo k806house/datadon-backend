@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 
-	sq "github.com/Masterminds/squirrel"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -17,17 +16,25 @@ import (
 )
 
 type EventExamUploadRequest struct {
-	ExamID   int    `json:"exam_id"`
-	FileName string `json:"file_name"`
 }
 
 type EventExamUploadResponse struct {
-	UploadLink string `json:"upload_link"`
+	UploadLink  string `json:"upload_link"`
+	TmpFileName string `json:"tmp_file_name"`
 }
 
 func (e EventExamUploadResponse) Encode() (string, error) {
 	val, err := json.Marshal(e)
 	return string(val), err
+}
+
+func getRandomName(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
 
 func HandleRequest(ctx context.Context, req map[string]interface{}) (string, error) {
@@ -46,29 +53,6 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 		return "", err
 	}
 
-	if body.ExamID == 0 || body.FileName == "" {
-		return "", errors.New("invalid request")
-	}
-
-	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
-		Select("COUNT(*)").From("public.exam").
-		Where(sq.Eq{"id": body.ExamID}, sq.Eq{"user_id": userID})
-
-	query, args, err := stmt.ToSql()
-	if err != nil {
-		return "", err
-	}
-
-	cnt := 0
-	err = lib.GetDB(ctx).GetContext(ctx, &cnt, query, args...)
-	if errors.Is(err, sql.ErrNoRows) || cnt == 0 {
-		return "", errors.New("no exam found")
-	}
-
-	if err != nil {
-		return "", err
-	}
-
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion("eu-west-1"),
 	)
@@ -80,18 +64,20 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 		log.Fatalf("failed to create AWS session, %v", err)
 	}
 
+	fileName := getRandomName(32)
 	awsS3Client := s3.NewFromConfig(cfg)
 	pr := s3.NewPresignClient(awsS3Client)
 	prReq, err := pr.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String("datadon-data"),
-		Key:    aws.String(fmt.Sprint("exam/%d/%s", body.ExamID, body.FileName)),
+		Key:    aws.String(fmt.Sprintf("tmp/%s", fileName)),
 	})
 	if err != nil {
 		return "", err
 	}
 
 	return EventExamUploadResponse{
-		UploadLink: prReq.URL,
+		UploadLink:  prReq.URL,
+		TmpFileName: fileName,
 	}.Encode()
 }
 
