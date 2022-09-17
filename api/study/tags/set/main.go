@@ -2,25 +2,24 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/k806house/datadon-backend/lib"
-	"github.com/k806house/datadon-backend/repository/exam"
+	"github.com/k806house/datadon-backend/model"
 )
 
-type EventExamFilesRequest struct {
-	ExamID int `json:"exam_id,omitempty"`
+type EventStudyTagsSetRequest struct {
+	ExamID int           `json:"study_id"`
+	Tags   model.TagList `json:"tags"`
 }
 
-type EventExamFilesResponse struct {
-	Files []string `json:"files,omitempty"`
+type EvenStudyTagsSetResponse struct {
 }
 
-func (e EventExamFilesResponse) Encode() (string, error) {
+func (e EvenStudyTagsSetResponse) Encode() (string, error) {
 	val, err := json.Marshal(e)
 	return string(val), err
 }
@@ -35,18 +34,18 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 		return "", errors.New("Unauthorized")
 	}
 
-	body := EventExamFilesRequest{}
-	_ = lib.GetBody(req, &body)
+	body := EventStudyTagsSetRequest{}
+	err = lib.GetBody(req, &body)
 	if err != nil {
 		return "", err
 	}
 
-	if body.ExamID <= 0 {
+	if body.ExamID == 0 {
 		return "", errors.New("invalid request")
 	}
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
-		Select("COUNT(*)").From("public.exam").
+		Update("public.study").Set("tags", body.Tags).
 		Where(sq.Eq{"id": body.ExamID}, sq.Eq{"user_id": userID})
 
 	query, args, err := stmt.ToSql()
@@ -54,22 +53,19 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 		return "", err
 	}
 
-	cnt := 0
-	err = lib.GetDB(ctx).GetContext(ctx, &cnt, query, args...)
-	if errors.Is(err, sql.ErrNoRows) || cnt == 0 {
-		return "", errors.New("no exam found")
-	}
-
+	res, err := lib.GetDB(ctx).ExecContext(ctx, query, args...)
 	if err != nil {
 		return "", err
 	}
-
-	files, err := exam.GetExamFiles(ctx, body.ExamID)
+	affected, err := res.RowsAffected()
 	if err != nil {
 		return "", err
 	}
+	if affected == 0 {
+		return "", errors.New("no study found")
+	}
 
-	return EventExamFilesResponse{Files: files}.Encode()
+	return EvenStudyTagsSetResponse{}.Encode()
 }
 
 func main() {

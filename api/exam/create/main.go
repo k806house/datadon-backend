@@ -26,7 +26,7 @@ type EventExamCreateRequest struct {
 }
 
 type EventExamCreateResponse struct {
-	model.Exam
+	ExamID int `json:"exam_id"`
 }
 
 func (e EventExamCreateResponse) Encode() (string, error) {
@@ -52,8 +52,8 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Insert("public.exam").
-		Columns("user_id", "name", "description", "created_at").
-		Values(userID, body.Name, body.Description, time.Now().UTC()).Suffix("RETURNING id")
+		Columns("user_id", "name", "description", "created_at", "tags").
+		Values(userID, body.Name, body.Description, time.Now().UTC(), body.Tags).Suffix("RETURNING id")
 
 	query, args, err := stmt.ToSql()
 	if err != nil {
@@ -95,7 +95,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	}
 
 	return EventExamCreateResponse{
-		Exam: model.Exam{},
+		ExamID: examID,
 	}.Encode()
 }
 

@@ -214,3 +214,107 @@ module "tag_get" {
   api_id = aws_apigatewayv2_api.lambda.id
   execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
 }
+
+module "study_create" {
+  source = "./lambda"
+
+  function_name = "study_create"
+  endpoint = "/study/create"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "study_get" {
+  source = "./lambda"
+
+  function_name = "study_get"
+  endpoint = "/study/get"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "study_tags_get" {
+  source = "./lambda"
+
+  function_name = "study_tags_get"
+  endpoint = "/study/tags/get"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "study_tags_set" {
+  source = "./lambda"
+
+  function_name = "study_tags_set"
+  endpoint = "/study/tags/set"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+#
+#/study/status
+
+module "study_status" {
+  source = "./lambda"
+
+  function_name = "study_status"
+  endpoint = "/study/status"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+#/study/match/invites
+
+module "study_match_invites" {
+  source = "./lambda"
+
+  function_name = "study_match_invites"
+  endpoint = "/study/match/invites"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+#/study/match/list
+module "study_match_list" {
+  source = "./lambda"
+
+  function_name = "study_match_list"
+  endpoint = "/study/match/list"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+#/study/match/response
+module "study_match_response" {
+  source = "./lambda"
+
+  function_name = "study_match_response"
+  endpoint = "/study/match/response"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+#/study/download
+
+module "study_match_download" {
+  source = "./lambda"
+
+  function_name = "study_match_download"
+  endpoint = "/study/match/download"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}

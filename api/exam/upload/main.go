@@ -15,9 +15,6 @@ import (
 	"github.com/k806house/datadon-backend/lib"
 )
 
-type EventExamUploadRequest struct {
-}
-
 type EventExamUploadResponse struct {
 	UploadLink  string `json:"upload_link"`
 	TmpFileName string `json:"tmp_file_name"`
@@ -45,12 +42,6 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 
 	if userID == -1 {
 		return "", errors.New("Unauthorized")
-	}
-
-	body := EventExamUploadRequest{}
-	err = lib.GetBody(req, &body)
-	if err != nil {
-		return "", err
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx,

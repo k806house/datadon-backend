@@ -9,18 +9,18 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/k806house/datadon-backend/lib"
-	"github.com/k806house/datadon-backend/repository/exam"
+	"github.com/k806house/datadon-backend/model"
 )
 
-type EventExamFilesRequest struct {
-	ExamID int `json:"exam_id,omitempty"`
+type EventStudyTagsGetRequest struct {
+	Study int `json:"study_id"`
 }
 
-type EventExamFilesResponse struct {
-	Files []string `json:"files,omitempty"`
+type EventStudyTagsGetResponse struct {
+	Tags model.TagList `json:"tags"`
 }
 
-func (e EventExamFilesResponse) Encode() (string, error) {
+func (e EventStudyTagsGetResponse) Encode() (string, error) {
 	val, err := json.Marshal(e)
 	return string(val), err
 }
@@ -35,41 +35,37 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 		return "", errors.New("Unauthorized")
 	}
 
-	body := EventExamFilesRequest{}
-	_ = lib.GetBody(req, &body)
+	body := EventStudyTagsGetRequest{}
+	err = lib.GetBody(req, &body)
 	if err != nil {
 		return "", err
 	}
 
-	if body.ExamID <= 0 {
+	if body.Study == 0 {
 		return "", errors.New("invalid request")
 	}
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
-		Select("COUNT(*)").From("public.exam").
-		Where(sq.Eq{"id": body.ExamID}, sq.Eq{"user_id": userID})
+		Select("tags").From("public.study").
+		Where(sq.Eq{"id": body.Study}, sq.Eq{"user_id": userID})
 
 	query, args, err := stmt.ToSql()
 	if err != nil {
 		return "", err
 	}
 
-	cnt := 0
-	err = lib.GetDB(ctx).GetContext(ctx, &cnt, query, args...)
-	if errors.Is(err, sql.ErrNoRows) || cnt == 0 {
-		return "", errors.New("no exam found")
+	tags := make(model.TagList, 0)
+	err = lib.GetDB(ctx).GetContext(ctx, &tags, query, args...)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", errors.New("no study found")
 	}
 
 	if err != nil {
 		return "", err
 	}
 
-	files, err := exam.GetExamFiles(ctx, body.ExamID)
-	if err != nil {
-		return "", err
-	}
+	return EventStudyTagsGetResponse{Tags: tags}.Encode()
 
-	return EventExamFilesResponse{Files: files}.Encode()
 }
 
 func main() {
