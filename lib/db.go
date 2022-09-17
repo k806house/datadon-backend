@@ -3,13 +3,18 @@ package lib
 import (
 	"context"
 	"fmt"
-	"log"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 )
 
-func ConnectToDB(ctx context.Context) (*sqlx.DB, error) {
+var conn *sqlx.DB
+
+func GetDB(ctx context.Context) *sqlx.DB {
+	if conn != nil {
+		return conn
+	}
+
 	dbName := "datadon"
 	dbUser := "postgres"
 	dbHost := "datadon.czxkhjdckqtq.eu-west-1.rds.amazonaws.com"
@@ -34,7 +39,10 @@ func ConnectToDB(ctx context.Context) (*sqlx.DB, error) {
 	)
 
 	conn, err := sqlx.Connect("pgx", dsn)
-	log.Println(err)
 
-	return conn, err
+	if err != nil {
+		panic(err)
+	}
+
+	return conn
 }

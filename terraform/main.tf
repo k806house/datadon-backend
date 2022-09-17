@@ -64,6 +64,9 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
 resource "aws_apigatewayv2_api" "lambda" {
   name          = "serverless_lambda_gw"
   protocol_type = "HTTP"
+  cors_configuration  {
+    allow_origins = ["*"]
+  }
 }
 
 resource "aws_apigatewayv2_stage" "lambda" {
@@ -115,6 +118,61 @@ module "user_auth" {
 
   function_name = "user_auth"
   endpoint = "/user/auth"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "user_logout" {
+  source = "./lambda"
+
+  function_name = "user_logout"
+  endpoint = "/user/logout"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "exam_create" {
+  source = "./lambda"
+
+  function_name = "exam_create"
+  endpoint = "/exam/create"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "exam_get" {
+  source = "./lambda"
+
+  function_name = "exam_get"
+  endpoint = "/exam/get"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "exam_upload" {
+  source = "./lambda"
+
+  function_name = "exam_upload"
+  endpoint = "/exam/upload"
+  s3_bucket = aws_s3_bucket.lambda_bucket.id
+  role = aws_iam_role.lambda_exec.arn
+  api_id = aws_apigatewayv2_api.lambda.id
+  execution_arn = aws_apigatewayv2_stage.lambda.execution_arn
+}
+
+module "exam_files" {
+  source = "./lambda"
+
+  function_name = "exam_files"
+  endpoint = "/exam/files"
   s3_bucket = aws_s3_bucket.lambda_bucket.id
   role = aws_iam_role.lambda_exec.arn
   api_id = aws_apigatewayv2_api.lambda.id
