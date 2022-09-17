@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/k806house/datadon-backend/lib"
 	"github.com/k806house/datadon-backend/model"
+	"github.com/rs/zerolog/log"
 )
 
 type EventStudyStatusRequest struct {
-	StudyID int `json:"exam_id,omitempty"`
+	StudyID int `json:"study_id,omitempty"`
 }
 
 type EventStudyStatusResponse struct {
@@ -21,6 +22,7 @@ type EventStudyStatusResponse struct {
 	WaitingResearcherDecision int `json:"waiting_researcher_decision"`
 	RejectedByUser            int `json:"rejected_by_user"`
 	RejectedByResearcher      int `json:"rejected_by_researcher"`
+	Ready                     int `json:"ready"`
 }
 
 const (
@@ -74,7 +76,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("*").From("public.study").
-		Where(sq.Eq{"id": body.StudyID}, sq.Eq{"user_id": userID})
+		Where(sq.Eq{"id": body.StudyID}).Where(sq.Eq{"user_id": userID})
 
 	query, args, err := stmt.ToSql()
 	if err != nil {
@@ -90,6 +92,10 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	tagList := make([]string, 0)
 	for _, tag := range study.Tags {
 		tagList = append(tagList, tag.Name)
+	}
+
+	if len(tagList) == 0 {
+		return EventStudyStatusResponse{}.Encode()
 	}
 
 	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
@@ -147,7 +153,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	// WaitingUserDecision
 	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("COUNT(*)").From("match").
-		Where(sq.Eq{"study_id": body.StudyID}, sq.Eq{"user": Wait})
+		Where(sq.Eq{"match.study_id": body.StudyID}).Where(sq.Eq{"match.user": Wait})
 
 	query, args, err = stmt.ToSql()
 	if err != nil {
@@ -163,13 +169,14 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	// WaitingResearcherDecision
 	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("COUNT(*)").From("match").
-		Where(sq.Eq{"study_id": body.StudyID}, sq.Eq{"user": Approved}, sq.Eq{"researcher_accepted": Wait})
+		Where(sq.Eq{"match.study_id": body.StudyID}).Where(sq.Eq{"match.user": Approved}).Where(sq.Eq{"match.researcher": Wait})
 
 	query, args, err = stmt.ToSql()
 	if err != nil {
 		return "", err
 	}
 
+	log.Print(query)
 	waitingResearcherDecision := 0
 	err = lib.GetDB(ctx).GetContext(ctx, &waitingResearcherDecision, query, args...)
 	if err != nil {
@@ -179,7 +186,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	// RejectedByUser
 	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("COUNT(*)").From("match").
-		Where(sq.Eq{"study_id": body.StudyID}, sq.Eq{"user": Declined})
+		Where(sq.Eq{"match.study_id": body.StudyID}).Where(sq.Eq{"match.user": Declined})
 
 	query, args, err = stmt.ToSql()
 	if err != nil {
@@ -195,7 +202,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	// RejectedByResearcher
 	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("COUNT(*)").From("match").
-		Where(sq.Eq{"study_id": body.StudyID}, sq.Eq{"researcher": Declined})
+		Where(sq.Eq{"match.study_id": body.StudyID}).Where(sq.Eq{"match.researcher": Declined})
 
 	query, args, err = stmt.ToSql()
 	if err != nil {
@@ -207,6 +214,21 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	if err != nil {
 		return "", err
 	}
+	// Ready
+	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
+		Select("COUNT(*)").From("match").
+		Where(sq.Eq{"match.study_id": body.StudyID}).Where(sq.Eq{"match.researcher": Approved}).Where(sq.Eq{"match.user": Approved})
+
+	query, args, err = stmt.ToSql()
+	if err != nil {
+		return "", err
+	}
+
+	ready := 0
+	err = lib.GetDB(ctx).GetContext(ctx, &ready, query, args...)
+	if err != nil {
+		return "", err
+	}
 
 	return EventStudyStatusResponse{
 		Found:                     found,
@@ -214,6 +236,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 		WaitingResearcherDecision: waitingResearcherDecision,
 		RejectedByUser:            rejectedByUser,
 		RejectedByResearcher:      rejectedByResearcher,
+		Ready:                     ready,
 	}.Encode()
 }
 

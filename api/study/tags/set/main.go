@@ -12,8 +12,8 @@ import (
 )
 
 type EventStudyTagsSetRequest struct {
-	ExamID int           `json:"study_id"`
-	Tags   model.TagList `json:"tags"`
+	StudyID int           `json:"study_id"`
+	Tags    model.TagList `json:"tags"`
 }
 
 type EvenStudyTagsSetResponse struct {
@@ -40,13 +40,13 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 		return "", err
 	}
 
-	if body.ExamID == 0 {
+	if body.StudyID == 0 {
 		return "", errors.New("invalid request")
 	}
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Update("public.study").Set("tags", body.Tags).
-		Where(sq.Eq{"id": body.ExamID}, sq.Eq{"user_id": userID})
+		Where(sq.Eq{"id": body.StudyID}).Where(sq.Eq{"user_id": userID})
 
 	query, args, err := stmt.ToSql()
 	if err != nil {

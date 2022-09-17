@@ -12,7 +12,7 @@ import (
 )
 
 type EventStudyGetRequest struct {
-	StudyID int `json:"exam_id,omitempty"`
+	StudyID int `json:"study_id,omitempty"`
 }
 
 type EventStudyGetResponse struct {

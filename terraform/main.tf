@@ -308,11 +308,11 @@ module "study_match_response" {
 }
 #/study/download
 
-module "study_match_download" {
+module "study_download" {
   source = "./lambda"
 
-  function_name = "study_match_download"
-  endpoint = "/study/match/download"
+  function_name = "study_download"
+  endpoint = "/study/download"
   s3_bucket = aws_s3_bucket.lambda_bucket.id
   role = aws_iam_role.lambda_exec.arn
   api_id = aws_apigatewayv2_api.lambda.id

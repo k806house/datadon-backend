@@ -63,11 +63,11 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	if body.Kind == User {
 		stmt = stmt.
 			Set("user", body.Response).
-			Where(sq.Eq{"study_id": body.StudyID}, sq.Eq{"exam_id": body.ExamID})
+			Where(sq.Eq{"study_id": body.StudyID}).Where(sq.Eq{"exam_id": body.ExamID})
 	} else if body.Kind == Researcher {
 		stmt = stmt.
 			Set("researcher", body.Response).
-			Where(sq.Eq{"study_id": body.StudyID}, sq.Eq{"exam_id": body.ExamID})
+			Where(sq.Eq{"study_id": body.StudyID}).Where(sq.Eq{"exam_id": body.ExamID})
 	} else {
 		return "", errors.New("invalid kind. must be " + Researcher + " or " + User)
 	}

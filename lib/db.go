@@ -38,7 +38,8 @@ func GetDB(ctx context.Context) *sqlx.DB {
 		dbHost, dbPort, dbUser, dbPassword, dbName,
 	)
 
-	conn, err := sqlx.Connect("pgx", dsn)
+	var err error
+	conn, err = sqlx.Connect("pgx", dsn)
 
 	if err != nil {
 		panic(err)

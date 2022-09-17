@@ -40,7 +40,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	}
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
-		Select("exam_id").From("exam").
+		Select("id").From("exam").
 		Where(sq.Eq{"user_id": userID})
 
 	query, args, err := stmt.ToSql()
@@ -56,7 +56,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 
 	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("study_id").From("match").
-		Where(sq.Eq{"exam_id": examsIDs}, sq.Eq{"user": Wait})
+		Where(sq.Eq{"exam_id": examsIDs}).Where(sq.Eq{"match.user": Wait})
 
 	query, args, err = stmt.ToSql()
 	if err != nil {

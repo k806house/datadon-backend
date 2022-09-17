@@ -13,7 +13,7 @@ import (
 )
 
 type EventStudyDownloadRequest struct {
-	StudyID int `json:"exam_id,omitempty"`
+	StudyID int `json:"study_id,omitempty"`
 }
 
 type EventStudyDownloadResponse struct {
@@ -50,7 +50,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("*").From("public.study").
-		Where(sq.Eq{"id": body.StudyID}, sq.Eq{"user_id": userID})
+		Where(sq.Eq{"id": body.StudyID}).Where(sq.Eq{"user_id": userID})
 
 	query, args, err := stmt.ToSql()
 	if err != nil {
@@ -65,7 +65,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 
 	stmt = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("exam_id").From("public.match").
-		Where(sq.Eq{"study_id": body.StudyID}, sq.Eq{"user": Approved}, sq.Eq{"researcher": Approved})
+		Where(sq.Eq{"study_id": body.StudyID}).Where(sq.Eq{"match.user": Approved}).Where(sq.Eq{"match.researcher": Approved})
 
 	query, args, err = stmt.ToSql()
 	if err != nil {

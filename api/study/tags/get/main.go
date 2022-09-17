@@ -47,7 +47,7 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select("tags").From("public.study").
-		Where(sq.Eq{"id": body.Study}, sq.Eq{"user_id": userID})
+		Where(sq.Eq{"id": body.Study}).Where(sq.Eq{"user_id": userID})
 
 	query, args, err := stmt.ToSql()
 	if err != nil {
