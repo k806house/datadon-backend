@@ -5,7 +5,7 @@ build:
 
 .PHONY: deploy
 deploy:
-	cd terraform && terraform apply
+	./scripts/build && cd terraform && terraform apply -auto-approve
 
 .PHONY: init
 init:
