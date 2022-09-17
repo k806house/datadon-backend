@@ -1,0 +1,7 @@
+build
+.terraform
+*/.terraform.lock.hcl
+*/terraform.tfstate*
+*.zip
+.idea
+.DS_store
