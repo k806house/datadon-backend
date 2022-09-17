@@ -34,11 +34,9 @@ resource "aws_apigatewayv2_integration" "lambda" {
 resource "aws_apigatewayv2_route" "lambda" {
   api_id = var.api_id
 
-  route_key = "GET ${var.endpoint}"
+  route_key = "POST ${var.endpoint}"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
-
-
 
 resource "aws_lambda_permission" "lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
