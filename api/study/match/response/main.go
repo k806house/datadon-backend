@@ -1,4 +1,4 @@
-package approve
+package main
 
 import (
 	"context"
@@ -14,7 +14,7 @@ type EventStudyMatchResponseRequest struct {
 	StudyID  int    `json:"study_id,omitempty"`
 	ExamID   int    `json:"exam_id,omitempty"`
 	Kind     string `json:"kind,omitempty"`
-	Response string `json:"action,omitempty"`
+	Response string `json:"response,omitempty"`
 }
 
 type EventStudyMatchResponseResponse struct {
@@ -55,14 +55,14 @@ func HandleRequest(ctx context.Context, req map[string]interface{}) (string, err
 	}
 
 	if body.Response != Approved && body.Response != Declined {
-		return "", errors.New("response kind must be " + Approved + " or " + Declined)
+		return "", errors.New("response must be " + Approved + " or " + Declined)
 	}
 
 	stmt := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Update("match")
 	if body.Kind == User {
 		stmt = stmt.
-			Set("user", body.Response).
+			Set("\"user\"", body.Response).
 			Where(sq.Eq{"study_id": body.StudyID}).Where(sq.Eq{"exam_id": body.ExamID})
 	} else if body.Kind == Researcher {
 		stmt = stmt.

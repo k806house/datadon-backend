@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -37,11 +36,10 @@ func GetExamFiles(ctx context.Context, examID int) ([]string, error) {
 
 	list := make([]string, 0)
 	for _, obj := range objects.Contents {
-		key := *obj.Key
-		key = strings.Replace(key, fmt.Sprintf("exam/%d/", examID), "", 1)
-		if key != "" {
-			list = append(list, key)
+		if *obj.Key == fmt.Sprintf("exam/%d/", examID) {
+			continue
 		}
+		list = append(list, fmt.Sprintf("https://datadon-data.s3.eu-west-1.amazonaws.com/%s", *obj.Key))
 	}
 
 	return list, nil
